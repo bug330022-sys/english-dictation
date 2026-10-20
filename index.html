@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>英文單字聽寫練習｜20 題</title>
+<style>
+:root{font-family:system-ui,-apple-system,'Noto Sans TC',sans-serif;color:#192536;background:#f3f6fa}*{box-sizing:border-box}body{margin:0;padding:26px 14px}.wrap{max-width:780px;margin:auto}.panel{background:white;border:1px solid #dce4ed;border-radius:17px;padding:24px;margin-top:15px;box-shadow:0 3px 16px #1a3b5b09}h1{font-size:26px;margin:0 0 6px}h2{font-size:19px;margin:0 0 12px}.sub{color:#61748c;font-size:14px}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}button,select,input{font:inherit}button{background:#195ab7;color:white;border:0;border-radius:9px;padding:11px 15px;cursor:pointer}button.secondary{background:#e8eff8;color:#1b416f}button:disabled{opacity:.4;cursor:not-allowed}input,select{border:1px solid #c9d5e2;border-radius:9px;padding:11px;width:100%;background:white}label{font-size:14px;color:#44556a;display:block;margin:14px 0 6px}select{width:auto;max-width:100%}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.status{font-weight:700;color:#1b4c80}.score{font-size:14px;color:#53677c}.result{margin-top:18px;padding:14px;border-radius:10px;background:#f1f5fa;white-space:pre-wrap;line-height:1.9}.ok{color:#158040}.bad{color:#bb453e}.hidden{display:none!important}.hint{font-size:13px;color:#6b7787}footer{font-size:12px;color:#65768c;padding:16px 2px}@media(max-width:560px){.two{grid-template-columns:1fr}.panel{padding:18px}h1{font-size:23px}}
+</style>
+</head>
+<body><main class="wrap">
+<h1>🎧 英文單字聽寫練習</h1><div class="sub">20 個商用英文單字／片語｜隱藏題目，先聽再寫</div>
+<section class="panel"><h2>測驗設定</h2><div class="row"><label>練習模式 <select id="mode"><option value="all">全部 20 題隨機</option><option value="five">隨機 5 題</option><option value="missed">只複習錯題</option></select></label><label>發音速度 <select id="rate"><option value="0.7">慢速 0.7×</option><option value="0.85" selected>標準練習 0.85×</option><option value="1">正常 1×</option></select></label><label>發音 <select id="accent"><option value="en-US">美式英語</option><option value="en-GB">英式英語</option></select></label></div><div class="row"><button id="start">開始新測驗</button><button class="secondary" id="clear">清除錯題紀錄</button></div><p class="hint">播放使用裝置內建語音服務，無須下載音檔；不同裝置的發音可能略有不同。部分手機需先按播放才能發聲。</p></section>
+<section class="panel hidden" id="quiz"><div class="row" style="justify-content:space-between"><span class="status" id="progress"></span><span class="score" id="score"></span></div><h2 style="text-align:center;margin:30px 0 8px">請聽英文並寫出答案</h2><p class="sub" style="text-align:center">題目不會顯示英文或中文，批改後才揭曉</p><div class="row" style="justify-content:center;margin:22px 0"><button id="play">🔊 播放這一題</button><button class="secondary" id="repeat">重播</button></div><div class="two"><div><label for="english">英文拼寫</label><input id="english" autocomplete="off" spellcheck="false" placeholder="輸入完整英文"></div><div><label for="chinese">中文意思</label><input id="chinese" autocomplete="off" placeholder="輸入一個中文意思即可"></div></div><div class="row" style="margin-top:18px"><button id="check">確認答案</button><button class="secondary hidden" id="next">下一題 →</button></div><div id="result" class="result hidden"></div></section>
+<section class="panel hidden" id="summary"><h2>測驗完成</h2><div id="final"></div><div class="row" style="margin-top:15px"><button id="again">再測一次</button><button class="secondary" id="redo">練習這次錯題</button></div></section>
+<footer>開源靜態練習頁面 · 所有作答資料只存在你的瀏覽器；網站不會收集或上傳作答內容。</footer></main>
+<script>
+'use strict';
+const words=[
+['position',['職位','職務','位置']],
+['domestic consumption',['國內消費']],
+['marketing strategy',['行銷策略','營銷策略']],
+['promotion',['升遷','升職','促銷','推廣']],
+['fuel-efficient',['省燃料的','省油的','燃料效率高的','節能的']],
+['appliance',['家電','家用電器','電器']],
+['be available',['可獲得的','可取得的','有空的','可用的','可獲得','有空','可取得']],
+['schedule',['安排','行程表','時間表','排程','時程表']],
+['confirmation code',['確認碼','確認代碼']],
+['be invalid',['失效的','無效的','失效','無效']],
+['make a reservation',['訂位','預約','訂房']],
+['bank statement',['銀行明細','銀行對帳單','銀行交易明細']],
+['automatic debit option',['自動扣款選項','自動扣款']],
+['reimbursement',['補償','報銷','費用補還','費用報銷','補還']],
+['under warranty',['保固期間','保固期間內','在保固期內','在保固期間內','保固中']],
+['estimation',['估計','估價','估算']],
+['be dedicated to',['致力於','奉獻於','專注於']],
+['participate in',['參加','參與']],
+['customize',['客製化','訂製','定制']],
+['customer satisfaction',['客人滿意度','顧客滿意度','客戶滿意度','顧客滿意','客人滿意度']]
+];
+const $=id=>document.getElementById(id);
+let pool=[],index=0,correct=0,misses=[],lastMisses=[],judged=false;
+const normalizeEn=s=>s.trim().toLowerCase().replace(/[‐‑–—]/g,'-').replace(/\s+/g,' ');
+const normalizeZh=s=>s.replace(/[\s，,。、.!！?？]/g,'').trim();
+const shuffle=a=>{let b=[...a];for(let i=b.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;};
+function readMisses(){try{return JSON.parse(localStorage.getItem('dictation-misses')||'[]')}catch{return []}}
+function saveMisses(xs){try{localStorage.setItem('dictation-misses',JSON.stringify([...new Set(xs)]))}catch{}}
+function speak(){if(!('speechSynthesis'in window)){alert('此瀏覽器不支援語音播放，請改用 Chrome、Edge 或 Safari。');return;}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(words[pool[index]][0]);u.lang=$('accent').value;u.rate=Number($('rate').value);u.pitch=1;const voices=speechSynthesis.getVoices();const v=voices.find(v=>v.lang.toLowerCase()==u.lang.toLowerCase())||voices.find(v=>v.lang.toLowerCase().startsWith(u.lang.slice(0,2).toLowerCase()));if(v)u.voice=v;speechSynthesis.speak(u);}
+function start(list){pool=shuffle(list);if(!pool.length){alert('目前沒有錯題，可以改選全部 20 題！');return;}index=0;correct=0;misses=[];$('summary').classList.add('hidden');$('quiz').classList.remove('hidden');draw();}
+function draw(){judged=false;$('progress').textContent=`第 ${index+1} / ${pool.length} 題`;$('score').textContent=`已答對 ${correct} 題`;$('english').value='';$('chinese').value='';$('english').disabled=false;$('chinese').disabled=false;$('check').classList.remove('hidden');$('next').classList.add('hidden');$('result').classList.add('hidden');$('english').focus();}
+$('start').onclick=()=>{let mode=$('mode').value;start(mode==='missed'?readMisses():mode==='five'?shuffle(words.map((_,i)=>i)).slice(0,5):words.map((_,i)=>i));};
+$('clear').onclick=()=>{if(confirm('確定清除這台裝置儲存的錯題紀錄？')){saveMisses([]);alert('已清除錯題紀錄');}};
+$('play').onclick=speak;$('repeat').onclick=speak;
+$('check').onclick=()=>{if(judged)return;const wordIndex=pool[index],w=words[wordIndex];const enOk=normalizeEn($('english').value)===normalizeEn(w[0]);const zhOk=w[1].some(z=>normalizeZh(z)===normalizeZh($('chinese').value));judged=true;if(enOk&&zhOk)correct++;else misses.push(wordIndex);const history=readMisses().filter(i=>i!==wordIndex);if(!(enOk&&zhOk))history.push(wordIndex);saveMisses(history);$('score').textContent=`已答對 ${correct} 題`;$('result').classList.remove('hidden');$('result').innerHTML=`<b class="${enOk&&zhOk?'ok':'bad'}">${enOk&&zhOk?'✅ 完全正確！':'❌ 需要再複習'}</b><br>英文：<b>${w[0]}</b>　${enOk?'✅':'❌'}<br>中文：<b>${w[1][0]}</b>　${zhOk?'✅':'❌'}<br><span class="hint">可接受其他常見翻譯：${w[1].join('、')}。若你寫了語意正確但不在清單中的中文，可自行核對。</span>`;$('english').disabled=true;$('chinese').disabled=true;$('check').classList.add('hidden');$('next').classList.remove('hidden');$('next').focus();};
+$('next').onclick=()=>{if(index+1>=pool.length){$('quiz').classList.add('hidden');$('summary').classList.remove('hidden');lastMisses=[...new Set(misses)];$('final').textContent=`得分 ${correct} / ${pool.length} 題。${lastMisses.length?'需要加強：'+lastMisses.map(i=>words[i][0]).join('、'):'全部答對，太棒了！'}`;$('redo').disabled=lastMisses.length===0;return;}index++;draw();};
+$('again').onclick=()=>start(pool);$('redo').onclick=()=>start(lastMisses);
+$('english').addEventListener('keydown',e=>{if(e.key==='Enter'){$('chinese').focus();}});$('chinese').addEventListener('keydown',e=>{if(e.key==='Enter'&&!judged)$('check').click();});
+</script></body></html>
